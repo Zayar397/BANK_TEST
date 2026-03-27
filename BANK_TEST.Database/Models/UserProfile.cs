@@ -11,7 +11,7 @@ public partial class UserProfile
 
     public string? MobileNo { get; set; }
 
-    public decimal Balance { get; set; }
+    public decimal? Balance { get; set; }
 
     public string? Pin { get; set; }
 

@@ -16,4 +16,20 @@
 
         public bool IsActive { get; set; }
     }
+    public class DEPOSTI_WITHDRAW_REQ
+    {
+        public string MobileNo { get; set; }
+
+        public decimal Balance { get; set; }
+    }
+    public class TRANSFER_REQ
+    {
+        public string frMobileNo { get; set; }
+
+        public string toMobileNo { get; set; }
+
+        public decimal Balance { get; set; }
+
+        public string Pin { get; set; }
+    }
 }
