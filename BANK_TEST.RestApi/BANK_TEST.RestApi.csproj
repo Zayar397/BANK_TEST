@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BANK_TEST.Database\BANK_TEST.Database.csproj" />
+    <ProjectReference Include="..\BANK_TEST.Domain\BANK_TEST.Domain.csproj" />
   </ItemGroup>
 
 </Project>

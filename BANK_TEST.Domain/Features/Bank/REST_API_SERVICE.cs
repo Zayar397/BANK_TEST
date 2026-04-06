@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BANK_TEST.Database.DataModel;
 using BANK_TEST.Database.Models;
 using BANK_TEST.RestApi.DataModel;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BANK_TEST.Domain.Features.Bank
 {
-    class REST_API_SERVICE
+    public class REST_API_SERVICE
     {
         private readonly AppDbContext _db = new AppDbContext();
         public List<UserProfile> GetUserProfiles()
@@ -145,7 +146,7 @@ namespace BANK_TEST.Domain.Features.Bank
             }
             if (item.Balance <= withdrawReq.Balance)
             {
-                return "The amount to be withdrawn is greater than the available balance.;
+                return "The amount to be withdrawn is greater than the available balance.";
             }
 
             item.Balance = item.Balance - withdrawReq.Balance;

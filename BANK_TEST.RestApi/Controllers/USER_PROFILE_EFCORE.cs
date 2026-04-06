@@ -1,5 +1,5 @@
-﻿using BANK_TEST.Database.Models;
-using BANK_TEST.RestApi.DataModel;
+﻿using BANK_TEST.Database.DataModel;
+using BANK_TEST.Database.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

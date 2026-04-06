@@ -1,4 +1,10 @@
-﻿namespace BANK_TEST.RestApi.DataModel
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BANK_TEST.Database.DataModel
 {
     public class USER_PROFILE_DATA_MODEL
     {
