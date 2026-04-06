@@ -17,11 +17,13 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<TblBlog> TblBlogs { get; set; }
 
+    public virtual DbSet<TransferAmt> TransferAmts { get; set; }
+
     public virtual DbSet<UserProfile> UserProfiles { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source = DESKTOP-BPF6HTF\\SQL2022;Initial Catalog = DotNetTrainingBatch5;User Id = sa;Password = p@ssw0rd;Trust Server Certificate = True;");
+        => optionsBuilder.UseSqlServer("Data Source=DESKTOP-BPF6HTF\\SQL2022;Initial Catalog=DotNetTrainingBatch5;User Id=sa;Password=p@ssw0rd;Trust Server Certificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +35,25 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.BlogAuthor).HasMaxLength(50);
             entity.Property(e => e.BlogTitle).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<TransferAmt>(entity =>
+        {
+            entity.ToTable("TRANSFER_AMT");
+
+            entity.Property(e => e.Id).HasColumnName("ID");
+            entity.Property(e => e.Amount)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("AMOUNT");
+            entity.Property(e => e.CreatedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("CREATED_DATE");
+            entity.Property(e => e.FrMobileNo)
+                .HasMaxLength(10)
+                .HasColumnName("FR_MOBILE_NO");
+            entity.Property(e => e.ToMobileNo)
+                .HasMaxLength(10)
+                .HasColumnName("TO_MOBILE_NO");
         });
 
         modelBuilder.Entity<UserProfile>(entity =>

@@ -1,49 +1,44 @@
-﻿using BANK_TEST.Database.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using BANK_TEST.Database.Models;
 using BANK_TEST.RestApi.DataModel;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BANK_TEST.RestApi.Controllers
+namespace BANK_TEST.Domain.Features.Bank
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class USER_PROFILE_EFCORE : ControllerBase
+    class REST_API_SERVICE
     {
         private readonly AppDbContext _db = new AppDbContext();
-        [HttpGet("GET_USERS")]
-        public IActionResult GetUserProfile()
+        public List<UserProfile> GetUserProfiles()
         {
-            var userProfileList = _db.UserProfiles.Where(x => x.IsActive == true).ToList();
-            return Ok(userProfileList);
+            var userList = _db.UserProfiles.AsNoTracking().ToList();
+            return userList;
         }
-
-        [HttpGet("GET_USER_WITH_ID")]
-        public IActionResult GetUserProfileById(int id)
+        public UserProfile GetUserProfileById(int id)
         {
-            var userProfile = _db.UserProfiles.AsNoTracking().FirstOrDefault(x => x.Id == id && x.IsActive == true);
-            if (userProfile is null)
-            {
-                return NotFound();
-            }
-            return Ok(userProfile);
+            var user = _db.UserProfiles
+                            .AsNoTracking()
+                            .FirstOrDefault(x => x.Id == id);
+            return user;
         }
-
-        [HttpPost("INSERT_USER")]
-        public IActionResult CreateUserProfile(UserProfile userProfile)
+        public bool CreateUserProfile(UserProfile userProfile)
         {
             _db.UserProfiles.Add(userProfile);
             int recordCount = _db.SaveChanges();
-            return Ok(recordCount > 0 ? "Record is inserted successfully." : "Failed to insert record");
+            return recordCount > 0;
         }
-
-        [HttpPut("UPDATE_USER")]
-        public IActionResult UpdateUserProfile(int id, UserProfile userProfile)
+        public string UpdateUserProfile(int id, UserProfile userProfile)
         {
-            var item = _db.UserProfiles.AsNoTracking().FirstOrDefault(x => x.Id == id);
-            if (item is null)
+            var item = _db.UserProfiles
+                            .AsNoTracking()
+                            .FirstOrDefault(x => x.Id == id);   
+            if(item is null)
             {
-                return NotFound();
+                return "User not found";
             }
             item.FullName = userProfile.FullName;
             item.MobileNo = userProfile.MobileNo;
@@ -53,17 +48,16 @@ namespace BANK_TEST.RestApi.Controllers
 
             _db.Entry(item).State = EntityState.Modified;
             int recordCount = _db.SaveChanges();
-
-            return Ok(recordCount > 0 ? "Record is updated successfully." : "Failed to update record");
+            return recordCount > 0 ? "Record is updated successfully." : "Failed to update record";
         }
-
-        [HttpPatch("UPDATE_USER_PATCH")]
-        public IActionResult UpdateUserProfileWithPatch(int id, UserProfile userProfile)
+        public string UpdateUserProfileEachField(int id, UserProfile userProfile)
         {
-            var item = _db.UserProfiles.AsNoTracking().FirstOrDefault(x => x.Id == id);
+            var item = _db.UserProfiles
+                            .AsNoTracking()
+                            .FirstOrDefault(x => x.Id == id);
             if (item is null)
             {
-                return NotFound();
+                return "User not found";
             }
             if (!string.IsNullOrWhiteSpace(userProfile.FullName))
             {
@@ -83,45 +77,40 @@ namespace BANK_TEST.RestApi.Controllers
             }
             item.CreatedDate = DateTime.Now;
 
-
             _db.Entry(item).State = EntityState.Modified;
             int recordCount = _db.SaveChanges();
-
-            return Ok(recordCount > 0 ? "Record is updated successfully." : "Failed to update record");
+            return recordCount > 0 ? "Record is updated successfully." : "Failed to update record";
         }
-
-        [HttpDelete("DELETE_USER")]
-        public IActionResult DeleteUserProfile(int id)
+        public string DeleteUserProfile(int id)
         {
-            var item = _db.UserProfiles.AsNoTracking().FirstOrDefault(x => x.Id == id);
+            var item = _db.UserProfiles
+                            .AsNoTracking()
+                            .FirstOrDefault(x => x.Id == id);
             if (item is null)
             {
-                return NotFound();
+                return "User not found";
             }
             item.IsActive = false;
             item.CreatedDate = DateTime.Now;
 
             _db.Entry(item).State = EntityState.Modified;
             int recordCount = _db.SaveChanges();
-
-            return Ok(recordCount > 0 ? "Record is deleted successfully." : "Failed to delete record");
+            return recordCount > 0 ? "Record is deleted successfully." : "Failed to delete record";
         }
-
-        [HttpPatch("DEPOSIT_REQ")]
-        public IActionResult DepositReq(DEPOSTI_WITHDRAW_REQ depositReq)
+        public string DepositReq(DEPOSTI_WITHDRAW_REQ depositReq)
         {
             if (string.IsNullOrWhiteSpace(depositReq.MobileNo))
             {
-                return BadRequest("Mobile number is required.");
+                return "Mobile number is required.";
             }
             if (depositReq.Balance <= 0)
             {
-                return BadRequest("Balance must be greater than zero.");
+                return "Balance must be greater than zero.";
             }
             var item = _db.UserProfiles.AsNoTracking().FirstOrDefault(x => x.MobileNo == depositReq.MobileNo && x.IsActive == true);
             if (item is null)
             {
-                return NotFound("User not found");
+                return "User not found";
             }
             item.Balance = item.Balance + depositReq.Balance;
             item.CreatedDate = DateTime.Now;
@@ -129,19 +118,17 @@ namespace BANK_TEST.RestApi.Controllers
             _db.Entry(item).State = EntityState.Modified;
             int recordCount = _db.SaveChanges();
 
-            return Ok(recordCount > 0 ? "Deposit successful." : "Deposit fail.");
+            return recordCount > 0 ? "Deposit successful." : "Deposit fail.";
         }
-
-        [HttpPatch("WITHDRAW_REQ")]
-        public IActionResult WithdrawReq(DEPOSTI_WITHDRAW_REQ withdrawReq)
+        public string WithdrawReq(DEPOSTI_WITHDRAW_REQ withdrawReq)
         {
             if (string.IsNullOrWhiteSpace(withdrawReq.MobileNo))
             {
-                return BadRequest("Mobile number is required.");
+                return "Mobile number is required.";
             }
             if (withdrawReq.Balance <= 0)
             {
-                return BadRequest("Balance must be greater than zero.");
+                return "Balance must be greater than zero.";
             }
 
             var item = _db.UserProfiles
@@ -150,15 +137,15 @@ namespace BANK_TEST.RestApi.Controllers
 
             if (item is null)
             {
-                return NotFound("User not found");
+                return "User not found";
             }
             if (item.Balance <= 1000)
             {
-                return BadRequest("Unable to withdraw as balance is less than 1,000.");
+                return "Unable to withdraw as balance is less than 1,000.";
             }
             if (item.Balance <= withdrawReq.Balance)
             {
-                return BadRequest("The amount to be withdrawn is greater than the available balance.");
+                return "The amount to be withdrawn is greater than the available balance.;
             }
 
             item.Balance = item.Balance - withdrawReq.Balance;
@@ -167,23 +154,21 @@ namespace BANK_TEST.RestApi.Controllers
             _db.Entry(item).State = EntityState.Modified;
             int recordCount = _db.SaveChanges();
 
-            return Ok(recordCount > 0 ? "Withdraw successful." : "Withdraw fail.");
+            return recordCount > 0 ? "Withdraw successful." : "Withdraw fail.";
         }
-
-        [HttpPatch("TRANSFER_REQ")]
-        public IActionResult TransferReq(TRANSFER_REQ transferReq)
+        public string TransferReq(TRANSFER_REQ transferReq)
         {
             if (string.IsNullOrWhiteSpace(transferReq.frMobileNo) || string.IsNullOrWhiteSpace(transferReq.toMobileNo))
             {
-                return BadRequest("Both sender and receiver mobile numbers are required.");
+                return "Both sender and receiver mobile numbers are required.";
             }
             if (transferReq.frMobileNo == transferReq.toMobileNo)
             {
-                return BadRequest("Sender and receiver mobile numbers must not be same.");
+                return "Sender and receiver mobile numbers must not be same.";
             }
             if (transferReq.Balance <= 0)
             {
-                return BadRequest("Balance must be greater than zero.");
+                return "Balance must be greater than zero.";
             }
 
             var senderItem = _db.UserProfiles
@@ -192,19 +177,19 @@ namespace BANK_TEST.RestApi.Controllers
 
             if (senderItem is null)
             {
-                return NotFound("Sender user not found");
+                return "Sender user not found";
             }
             if (senderItem.Pin != transferReq.Pin)
             {
-                return BadRequest("Password is not correct.");
+                return "Password is not correct.";
             }
             if (senderItem.Balance <= 1000)
             {
-                return BadRequest("Unable to transfer as balance is less than 1,000.");
+                return "Unable to transfer as balance is less than 1,000.";
             }
             if (senderItem.Balance <= transferReq.Balance)
             {
-                return BadRequest("The amount to be transfer is greater than the available balance.");
+                return "The amount to be transfer is greater than the available balance.";
             }
 
             var receiverItem = _db.UserProfiles
@@ -213,7 +198,7 @@ namespace BANK_TEST.RestApi.Controllers
 
             if (receiverItem is null)
             {
-                return NotFound("Receiver user not found");
+                return "Receiver user not found";
             }
 
             senderItem.Balance = senderItem.Balance - transferReq.Balance;
@@ -237,7 +222,7 @@ namespace BANK_TEST.RestApi.Controllers
             _db.TransferAmts.Add(transferAmt);
             _db.SaveChanges();
 
-            return Ok(recordCount_1 > 0 && recordCount_2 > 0 ? "Transfer successful." : "Transfer fail.");
+            return recordCount_1 > 0 && recordCount_2 > 0 ? "Transfer successful." : "Transfer fail.";
         }
     }
 }
