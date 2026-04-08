@@ -5,8 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using BANK_TEST.Database.DataModel;
 using BANK_TEST.Database.Models;
-using BANK_TEST.RestApi.DataModel;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace BANK_TEST.Domain.Features.Bank
@@ -140,13 +138,9 @@ namespace BANK_TEST.Domain.Features.Bank
             {
                 return "User not found";
             }
-            if (item.Balance <= 1000)
+            if (item.Balance - withdrawReq.Balance <= 1000)
             {
                 return "Unable to withdraw as balance is less than 1,000.";
-            }
-            if (item.Balance <= withdrawReq.Balance)
-            {
-                return "The amount to be withdrawn is greater than the available balance.";
             }
 
             item.Balance = item.Balance - withdrawReq.Balance;
@@ -184,13 +178,9 @@ namespace BANK_TEST.Domain.Features.Bank
             {
                 return "Password is not correct.";
             }
-            if (senderItem.Balance <= 1000)
+            if (senderItem.Balance - transferReq.Balance <= 1000)
             {
                 return "Unable to transfer as balance is less than 1,000.";
-            }
-            if (senderItem.Balance <= transferReq.Balance)
-            {
-                return "The amount to be transfer is greater than the available balance.";
             }
 
             var receiverItem = _db.UserProfiles
