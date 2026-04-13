@@ -1,10 +1,11 @@
-﻿using System;
+﻿  using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BANK_TEST.Database.DataModel;
 using BANK_TEST.Database.Models;
+using BANK_TEST.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace BANK_TEST.Domain.Features.Bank
@@ -12,30 +13,30 @@ namespace BANK_TEST.Domain.Features.Bank
     public class REST_API_SERVICE
     {
         private readonly AppDbContext _db = new AppDbContext();
-        public List<UserProfile> GetUserProfiles()
+        public Task<List<UserProfile>> GetUserProfileAsync()
         {
-            var userList = _db.UserProfiles.AsNoTracking().ToList();
+            var userList = _db.UserProfiles.AsNoTracking().ToListAsync();
             return userList;
         }
-        public UserProfile GetUserProfileById(int id)
+        public Task<UserProfile> GetUserProfileByIdAsync(int id)
         {
             var user = _db.UserProfiles
                             .AsNoTracking()
-                            .FirstOrDefault(x => x.Id == id);
+                            .FirstOrDefaultAsync(x => x.Id == id);
             return user;
         }
-        public bool CreateUserProfile(UserProfile userProfile)
+        public async Task<bool> CreateUserProfileAsync(UserProfile userProfile)
         {
-            _db.UserProfiles.Add(userProfile);
-            int recordCount = _db.SaveChanges();
+            await _db.UserProfiles.AddAsync(userProfile);
+            int recordCount = await _db.SaveChangesAsync();
             return recordCount > 0;
         }
         public string UpdateUserProfile(int id, UserProfile userProfile)
         {
             var item = _db.UserProfiles
                             .AsNoTracking()
-                            .FirstOrDefault(x => x.Id == id);   
-            if(item is null)
+                            .FirstOrDefault(x => x.Id == id);
+            if (item is null)
             {
                 return "User not found";
             }
@@ -151,57 +152,72 @@ namespace BANK_TEST.Domain.Features.Bank
 
             return recordCount > 0 ? "Withdraw successful." : "Withdraw fail.";
         }
-        public string TransferReq(TRANSFER_REQ transferReq)
+        public async Task<TransferResponseModel> TransferReqAsync(TRANSFER_REQ transferReq)
         {
+            TransferResponseModel model = new TransferResponseModel();
             if (string.IsNullOrWhiteSpace(transferReq.frMobileNo) || string.IsNullOrWhiteSpace(transferReq.toMobileNo))
             {
-                return "Both sender and receiver mobile numbers are required.";
+                //return "Both sender and receiver mobile numbers are required.";
+                model.Response = BaseResponseModel.ValidationError("999", "Both sender and receiver mobile numbers are required.");
+                goto Result;
             }
             if (transferReq.frMobileNo == transferReq.toMobileNo)
             {
-                return "Sender and receiver mobile numbers must not be same.";
+                //return "Sender and receiver mobile numbers must not be same.";
+                model.Response = BaseResponseModel.ValidationError("999", "Sender and receiver mobile numbers must not be same.");
+                goto Result;
             }
             if (transferReq.Balance <= 0)
             {
-                return "Balance must be greater than zero.";
+                //return "Balance must be greater than zero.";
+                model.Response = BaseResponseModel.ValidationError("999", "Balance must be greater than zero.");
+                goto Result;
             }
 
-            var senderItem = _db.UserProfiles
-                                .AsNoTracking()
-                                .FirstOrDefault(x => x.MobileNo == transferReq.frMobileNo && x.IsActive == true);
+            var senderItem = await _db.UserProfiles
+                                        .FirstOrDefaultAsync(x => x.MobileNo == transferReq.frMobileNo && x.IsActive == true);
 
             if (senderItem is null)
             {
-                return "Sender user not found";
+                //return "Sender user not found";
+                model.Response = BaseResponseModel.ValidationError("999", "Sender user not found");
+                goto Result;
             }
             if (senderItem.Pin != transferReq.Pin)
             {
-                return "Password is not correct.";
+                //return "Password is not correct.";
+                model.Response = BaseResponseModel.ValidationError("999", "Password is not correct.");
+                goto Result;
             }
             if (senderItem.Balance - transferReq.Balance <= 1000)
             {
-                return "Unable to transfer as balance is less than 1,000.";
+                //return "Unable to transfer as balance is less than 1,000.";
+                model.Response = BaseResponseModel.ValidationError("999", "Unable to transfer as balance is less than 1,000.");
+                goto Result;
             }
 
-            var receiverItem = _db.UserProfiles
-                                .AsNoTracking()
-                                .FirstOrDefault(x => x.MobileNo == transferReq.toMobileNo && x.IsActive == true);
+            var receiverItem = await _db.UserProfiles
+                                            .FirstOrDefaultAsync(x => x.MobileNo == transferReq.toMobileNo && x.IsActive == true);
 
             if (receiverItem is null)
             {
-                return "Receiver user not found";
+                //return "Receiver user not found";
+                model.Response = BaseResponseModel.ValidationError("999", "Receiver user not found");
+                goto Result;
             }
 
             senderItem.Balance = senderItem.Balance - transferReq.Balance;
             senderItem.CreatedDate = DateTime.Now;
+            await _db.SaveChangesAsync();
 
             receiverItem.Balance = receiverItem.Balance + transferReq.Balance;
+            await _db.SaveChangesAsync();
 
-            _db.Entry(senderItem).State = EntityState.Modified;
-            int recordCount_1 = _db.SaveChanges();
+            //_db.Entry(senderItem).State = EntityState.Modified;
+            //int recordCount_1 = _db.SaveChanges();
 
-            _db.Entry(receiverItem).State = EntityState.Modified;
-            int recordCount_2 = _db.SaveChanges();
+            //_db.Entry(receiverItem).State = EntityState.Modified;
+            //int recordCount_2 = _db.SaveChanges();
 
             TransferAmt transferAmt = new TransferAmt
             {
@@ -210,10 +226,14 @@ namespace BANK_TEST.Domain.Features.Bank
                 Amount = transferReq.Balance,
                 CreatedDate = DateTime.Now
             };
-            _db.TransferAmts.Add(transferAmt);
-            _db.SaveChanges();
+            await _db.TransferAmts.AddAsync(transferAmt);
+            await _db.SaveChangesAsync();
 
-            return recordCount_1 > 0 && recordCount_2 > 0 ? "Transfer successful." : "Transfer fail.";
+            //return recordCount_1 > 0 && recordCount_2 > 0 ? "Transfer successful." : "Transfer fail.";
+            model.Response = BaseResponseModel.Success("000", "Transfer successful.");
+
+        Result:
+            return model;
         }
     }
 }

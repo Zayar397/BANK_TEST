@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BANK_TEST.RestApi.Controllers
+namespace BANK_TEST.RestApi.Controllers.UserProfile
 {
     [Route("api/[controller]")]
     [ApiController]

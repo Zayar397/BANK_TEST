@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BANK_TEST.RestApi.Controllers
+namespace BANK_TEST.RestApi.Controllers.UserProfile
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class USER_PROFILE_SERVICE : ControllerBase
+    public class USER_PROFILE_SERVICE : BaseController
     {
         private readonly REST_API_SERVICE _restApiService = new REST_API_SERVICE();
         [HttpGet("GET_USERS")]
@@ -73,10 +73,15 @@ namespace BANK_TEST.RestApi.Controllers
         }
 
         [HttpPatch("TRANSFER_REQ")]
-        public IActionResult TransferReq(TRANSFER_REQ transferReq)
+        //public IActionResult TransferReq(TRANSFER_REQ transferReq)
+        //{
+        //    string message = _restApiService.TransferReq(transferReq);
+        //    return Ok(message);
+        //}
+        public async Task<IActionResult> TransferReq(TRANSFER_REQ transferReq)
         {
-            string message = _restApiService.TransferReq(transferReq);
-            return Ok(message);
+            var model = await _restApiService.TransferReqAsync(transferReq);
+            return Execute(model);
         }
     }
 }
